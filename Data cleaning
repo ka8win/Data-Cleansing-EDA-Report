@@ -1,0 +1,81 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Generate a simple dataset
+data = {
+    'ID': range(1, 21),
+    'Age': [22, 25, np.nan, 27, 29, 24, 30, 28, 23, np.nan, 26, 31, 29, 24, np.nan, 27, 22, 30, 25, 26],
+    'Salary': [30000, 35000, 32000, 40000, 41000, np.nan, 50000, 47000, 34000, 36000, 39000, 52000, np.nan, 45000, 33000, 41000, 37000, 49000, np.nan, 43000],
+    'Department': ['HR', 'IT', 'Finance', 'IT', 'HR', 'Marketing', 'Finance', 'HR', 'Marketing', 'IT', 'Finance', 'HR', 'IT', 'Finance', 'Marketing', 'HR', 'IT', 'Finance', 'Marketing', 'HR']
+}
+
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# Introduce some duplicate rows
+df.loc[20] = df.loc[5]
+df.loc[21] = df.loc[10]
+
+# Introduce some inconsistent categorical values
+df.loc[3, 'Department'] = 'it'
+df.loc[15, 'Department'] = 'Hr'
+
+# Display the dataset
+print("Original Dataset:")
+print(df)
+
+# Data Cleaning
+print("\nData Cleaning...")
+
+# Handle missing values
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Salary'].fillna(df['Salary'].median(), inplace=True)
+
+# Remove duplicate rows
+df.drop_duplicates(inplace=True)
+
+# Standardize categorical values
+df['Department'] = df['Department'].str.strip().str.capitalize()
+
+# Detect and remove outliers (using IQR method)
+Q1 = df[['Age', 'Salary']].quantile(0.25)
+Q3 = df[['Age', 'Salary']].quantile(0.75)
+IQR = Q3 - Q1
+
+df = df[~((df[['Age', 'Salary']] < (Q1 - 1.5 * IQR)) | (df[['Age', 'Salary']] > (Q3 + 1.5 * IQR))).any(axis=1)]
+
+# Display cleaned dataset
+print("\nCleaned Dataset:")
+print(df)
+
+# Exploratory Data Analysis (EDA)
+print("\nPerforming EDA...")
+
+# Summary statistics
+print("\nSummary Statistics:")
+print(df.describe())
+
+# Visualization
+sns.histplot(df['Age'], bins=5, kde=True)
+plt.title("Age Distribution")
+plt.show()
+
+sns.boxplot(x=df['Salary'])
+plt.title("Salary Boxplot")
+plt.show()
+
+sns.scatterplot(x=df['Age'], y=df['Salary'])
+plt.title("Age vs Salary")
+plt.show()
+
+# Correlation matrix
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title("Correlation Matrix")
+plt.show()
+
+# Bar plot for categorical variables
+sns.countplot(x=df['Department'])
+plt.title("Department Distribution")
+plt.show()
